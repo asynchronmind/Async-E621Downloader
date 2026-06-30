@@ -1,9 +1,12 @@
 {
   "tags": [
-    "felid"
+    "felid | e621"
   ],
   "blacklist": [
     "gore | animated | young | feces | fart | blood | feral | rape | pregnancy"
+  ],
+  "ignored_id": [
+    "2855855 | 2294957"
   ],
   "use_explicit": [
     false
@@ -15,7 +18,7 @@
     true
   ],
   "format_swf": [
-    false
+    true
   ],
   "format_webp": [
     true
@@ -42,7 +45,7 @@
     "score"
   ],
   "max_to_download": [
-    500
+    5
   ],
   "min_area": [
     1166400
@@ -64,5 +67,9 @@
   ],
   "auto_file_renaming": [
     false
-  ]
+  ],
+  "posts": [
+    "2855855"
+  ],
+  "download_posts_first": true
 }

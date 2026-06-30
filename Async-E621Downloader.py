@@ -10,9 +10,6 @@ import polars
 def download_content(config, db, _in):
     _dwnl_dir = get_value_for_sort(config, "downloading_dir", _in)
 
-    raw_url = "https://static1.e621.net/data/"
-    print("[Info] Donwloading content..")
-
     # vars
     _a_j = get_value_for_sort(config, "aria2_queue_size", _in)
     _a_max = get_value_for_sort(config, "aria2_max_concurred_download", _in)
@@ -20,23 +17,9 @@ def download_content(config, db, _in):
     _all_ov = get_value_for_sort(config, "allow_overwrite", _in)
     _auto_rename = get_value_for_sort(config, "auto_file_renaming", _in)
 
+    _pather = write_md5_file(_dwnl_dir, db)
+
     print("[Info] Downloading files..")
-    _pather = os.path.join(os.path.split(
-        os.path.abspath(__file__))[0], "Temp/md5.txt")
-    if (os.path.isfile(_pather)):
-        os.remove(_pather)
-
-    with (open(_pather, "w")) as file:
-        for _row in db.iter_rows():
-            filename = _row[3] + "." + _row[11]
-            url = raw_url + _row[3][:2] + "/" + \
-                _row[3][2:4] + "/" + filename
-
-            if (os.path.isfile(os.path.join(_dwnl_dir, filename))):
-                continue
-
-            file.write(str(url) + "\n")
-
     subprocess.run([
         "aria2c",
         "--input-file", _pather,
@@ -47,11 +30,44 @@ def download_content(config, db, _in):
         "--auto-file-renaming", str(_auto_rename)
     ])
 
-    print("\n[Info] Downloading loop stage completed!")
+    print("\n[Info] Downloading completed!")
+
+
+def get_md5_file():
+    return os.path.join(os.path.split(
+        os.path.abspath(__file__))[0], "Temp/md5.txt")
+
+
+def clear_md5_file():
+    _pather = get_md5_file()
+
+    if (os.path.isfile(_pather)):
+        os.remove(_pather)
+
+
+def write_md5_file(_dwnl_dir, db=polars):
+    print("[Info] Writing md5 content into temp file..")
+    _pather = get_md5_file()
+
+    clear_md5_file()
+
+    with (open(_pather, "w")) as file:
+        for _row in db.iter_rows():
+            filename = _row[3] + "." + _row[11]
+            url = "https://static1.e621.net/data/" + _row[3][:2] + "/" + \
+                _row[3][2:4] + "/" + filename
+
+            if (os.path.isfile(os.path.join(_dwnl_dir, filename))):
+                continue
+
+            file.write(str(url) + "\n")
+
+    return _pather
 
 
 # make sorted csv table of content to download
 def sorting_content(db_dir, config, _in=int):
+    print("[Info] Sorting database..")
     db = polars.read_csv(db_dir)
     _tags = str(get_value_for_sort(config, "tags", _in)
                 ).replace(' ', '').split('|')
@@ -81,6 +97,9 @@ def sorting_content(db_dir, config, _in=int):
 
     _min_area = get_value_for_sort(config, "min_area", _in)
 
+    _ignored_id = get_value_for_sort(
+        config, "ignored_id", _in).replace(' ', '').split('|')
+
     # filter
     if _min_a > 0:
         db = db.filter(polars.col("id") >= _min_a)
@@ -98,37 +117,41 @@ def sorting_content(db_dir, config, _in=int):
     db.filter(polars.col("score") >= _min_i)
 
     if not _use_e:
-        db = db.filter(polars.col("rating") != "e")
+        db = db.filter(polars.col("rating").eq("e").not_())
     if not _use_q:
-        db = db.filter(polars.col("rating") != "q")
+        db = db.filter(polars.col("rating").eq("q").not_())
     if not _use_s:
-        db = db.filter(polars.col("rating") != "s")
+        db = db.filter(polars.col("rating").eq("s").not_())
 
     # filter formats
     if not _f_swf:
-        db = db.filter(polars.col("file_ext") != "swf")
+        db = db.filter(polars.col("file_ext").eq("swf").not_())
 
     if not _f_webp:
-        db = db.filter(polars.col("file_ext") != "webp")
+        db = db.filter(polars.col("file_ext").eq("webp").not_())
 
     if not _f_webm:
-        db = db.filter(polars.col("file_ext") != "webm")
+        db = db.filter(polars.col("file_ext").eq("webm").not_())
 
     if not _f_mp4:
-        db = db.filter(polars.col("file_ext") != "mp4")
+        db = db.filter(polars.col("file_ext").eq("mp4").not_())
 
     if not _f_png:
-        db = db.filter(polars.col("file_ext") != "png")
+        db = db.filter(polars.col("file_ext").eq("png").not_())
 
     if not _f_jpg:
-        db = db.filter(polars.col("file_ext") != "jpg")
+        db = db.filter(polars.col("file_ext").eq("jpg").not_())
 
     if not _f_gif:
-        db = db.filter(polars.col("file_ext") != "gif")
+        db = db.filter(polars.col("file_ext").eq("gif").not_())
 
     if _min_area > 0:
         db = db.filter((polars.col("image_width") *
                        polars.col("image_height")) >= _min_area)
+
+    for _ign in _ignored_id:
+        if _ign != "":
+            db = db.filter(polars.col("id").eq(int(_ign)).not_())
 
     # sorting
     list_values = []
@@ -148,6 +171,18 @@ def sorting_content(db_dir, config, _in=int):
     # Get first n..
     if (_max_d > 0):
         db = db.head(_max_d)
+
+    print(db)
+
+    return db
+
+
+def simple_sorting_content(db_dir, config):
+    print("[Info] Sorting database..")
+    db = polars.read_csv(db_dir)
+
+    for _id in config["posts"]:
+        db = db.filter(polars.col("id").eq(int(_id)))
 
     print(db)
 
@@ -197,7 +232,7 @@ def init():
 
     if (os.path.isfile(db_dir)):
         print("[Ann] Database file is exist!")
-        i = input("Redownload database (y/n): ")
+        i = input("Download database (y/n): ")
         if (i == 'y'):
             download_database(db_dir)
     else:
@@ -215,19 +250,36 @@ def init():
         print("[Error] Config.json open error!")
         return
 
-    # Making loop for TAGS massive from config
-    print("=== DOWNLOADING LOOP ===")
+    if not (config["download_posts_first"]):
+        downloading_loop(config, db_dir)
+        downloading_posts(config, db_dir)
+    else:
+        downloading_posts(config, db_dir)
+        downloading_loop(config, db_dir)
+
+
+def downloading_posts(config, db_dir):
+    if (len(config["posts"]) <= 0):
+        return
+
+    print("=== DOWNLOADING POSTS ===")
+    db = simple_sorting_content(db_dir, config)
+    download_content(config, db, 0)
+
+
+def downloading_loop(config, db_dir):
     for i in range(0, len(config["tags"])):
+        print("=== DOWNLOADING LOOP ===")
         print(f"[Info] Going loop on tags ({i + 1}/{len(config["tags"])})")
-        print("[Info] Soring database..")
         _db = sorting_content(db_dir, config, i)
         download_content(config, _db, i)
 
 
 if __name__ == "__main__":
-    print("==========  - ASYNC-E621DOWNLOADED -  ==========")
-    print("Thanks for using my noob script.\nThis is a beta version. Have fun!\n\n")
+    print("\n==========  - ASYNC-E621DOWNLOADED -  ==========")
+    print("Thanks for using my noob script.\nHave fun!\n\n")
     init()
+    clear_md5_file()
 
 # ['id', 'uploader_id', 'created_at', 'md5', 'source', 'rating', 'image_width', 'image_height', 'tag_string', 'locked_tags', 'fav_count', 'file_ext',
 # 'parent_id', 'change_seq', 'approver_id', 'file_size', 'comment_count', 'description', 'duration', 'updated_at', 'is_deleted', 'is_pending', 'is_flagged',

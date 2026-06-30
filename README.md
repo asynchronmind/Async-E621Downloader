@@ -25,6 +25,7 @@ The parser processes each tag from the `tags` array sequentially and repeats the
 |---------|-------------|
 | `tags` | List of tags to parse. The parser processes each tag sequentially in a loop. Multiple tags can be combined using `\|` (e.g. `"catgirl \| solo"`). |
 | `blacklist` | Tags to exclude from results. Multiple blacklist tags can be combined using `\|` (e.g. `"gore \| animated"`). |
+| `ignored_id` | List of ignored posts. It also can be combined using `\|` (e.g. `"000000001 \| 000000002"`). |
 | `use_explicit` | Enable explicit content. |
 | `use_questionable` | Enable questionable content. |
 | `use_safe` | Enable safe content. |
@@ -39,6 +40,8 @@ The parser processes each tag from the `tags` array sequentially and repeats the
 | `aria2_max_concurred_download` | Maximum concurrent downloads. |
 | `allow_overwrite` | Overwrite existing files. |
 | `auto_file_renaming` | Automatically rename duplicate files. |
+| `posts` | List of posts to download. |
+| `download_posts_first` | Set when posts are about to be downloaded. |
 
 The parser iterates through the `tags` array and uses the same index for all other configuration arrays.
 
