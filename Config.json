@@ -1,0 +1,68 @@
+{
+  "tags": [
+    "felid"
+  ],
+  "blacklist": [
+    "gore | animated | young | feces | fart | blood | feral | rape | pregnancy"
+  ],
+  "use_explicit": [
+    false
+  ],
+  "use_questionable": [
+    false
+  ],
+  "use_safe": [
+    true
+  ],
+  "format_swf": [
+    false
+  ],
+  "format_webp": [
+    true
+  ],
+  "format_webm": [
+    true
+  ],
+  "format_mp4": [
+    true
+  ],
+  "format_png": [
+    true
+  ],
+  "format_jpg": [
+    true
+  ],
+  "format_gif": [
+    true
+  ],
+  "min_score": [
+    -1
+  ],
+  "sort_by": [
+    "score"
+  ],
+  "max_to_download": [
+    500
+  ],
+  "min_area": [
+    1166400
+  ],
+  "min_id": [
+    1553543
+  ],
+  "downloading_dir": [
+    "Content/"
+  ],
+  "aria2_queue_size": [
+    1
+  ],
+  "aria2_max_concurred_download": [
+    1
+  ],
+  "allow_overwrite": [
+    false
+  ],
+  "auto_file_renaming": [
+    false
+  ]
+}
