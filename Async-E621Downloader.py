@@ -97,12 +97,12 @@ def sorting_content(db_dir, config, _in=int):
 
     db.filter(polars.col("score") >= _min_i)
 
-    if _use_e:
-        db = db.filter(polars.col("rating") == "e")
-    if _use_q:
-        db = db.filter(polars.col("rating") == "q")
-    if _use_s:
-        db = db.filter(polars.col("rating") == "s")
+    if not _use_e:
+        db = db.filter(polars.col("rating") != "e")
+    if not _use_q:
+        db = db.filter(polars.col("rating") != "q")
+    if not _use_s:
+        db = db.filter(polars.col("rating") != "s")
 
     # filter formats
     if not _f_swf:
